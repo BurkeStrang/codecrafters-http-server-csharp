@@ -2,13 +2,21 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
-// You can use print statements as follows for debugging, they'll be visible when running tests.
-Console.WriteLine("Logs from your program will appear here!");
-
-// Uncomment this block to pass the first stage
 TcpListener server = new(IPAddress.Any, 4221);
 server.Start();
-Socket socket = server.AcceptSocket(); // wait for client
-byte[] response = Encoding.UTF8.GetBytes("HTTP/1.1 200 OK\r\n\r\n");
-socket.Send(response);
-socket.Close();
+while (true)
+{
+    Socket client = server.AcceptSocket();
+    Console.WriteLine("Connection reveived");
+    byte[] bufferRequest = new byte[1024];
+    client.Receive(bufferRequest);
+    string request = Encoding.ASCII.GetString(bufferRequest);
+    string startLine = request.Split("\r\n")[0];
+    string path = startLine.Split(" ")[1];
+    string response = "HTTP/1.1 404 Not Found\r\n\r\n";
+    if (path.Equals("/"))
+        response = "HTTP/1.1 200 OK\r\n\r\n";
+    byte[] msg = Encoding.ASCII.GetBytes(response);
+    Console.WriteLine(response);
+    client.Send(msg);
+}
