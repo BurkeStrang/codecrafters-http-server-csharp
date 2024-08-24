@@ -1,0 +1,17 @@
+namespace codecrafters_http_server.HttpServer.Domain.Models;
+
+public class HttpRequest
+{
+    public string? Method { get; set; }
+    public string? Path { get; set; }
+
+    public static HttpRequest Parse(byte[] bufferRequest)
+    {
+        string requestString = Encoding.ASCII.GetString(bufferRequest);
+        string startLine = requestString.Split("\r\n")[0];
+        string method = startLine.Split(" ")[0];
+        string path = startLine.Split(" ")[1];
+
+        return new HttpRequest { Method = method, Path = path };
+    }
+}
