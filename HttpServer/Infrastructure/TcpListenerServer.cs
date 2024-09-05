@@ -10,8 +10,8 @@ public class TcpListenerServer(IPAddress ipAddress, int port)
         Console.WriteLine("Server started and listening...");
     }
 
-    public Socket AcceptClient()
+    public async Task<Socket> AcceptClient()
     {
-        return _tcpListener.AcceptSocket();
+        return await _tcpListener.AcceptSocketAsync();
     }
 }

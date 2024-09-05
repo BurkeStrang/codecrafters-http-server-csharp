@@ -1,1 +1,1 @@
-new HttpServer().Start();
+await new HttpServer().Start();

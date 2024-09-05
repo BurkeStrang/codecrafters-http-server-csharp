@@ -8,12 +8,12 @@ public class HttpServer
 
     private readonly TcpListenerServer _tcpListenerServer;
 
-    public void Start()
+    public async Task Start()
     {
         _tcpListenerServer.Start();
         while (true)
         {
-            Socket client = _tcpListenerServer.AcceptClient();
+            Socket client = await _tcpListenerServer.AcceptClient();
             Console.WriteLine("Connection received");
             SocketHandler.HandleClient(client);
         }
