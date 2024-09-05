@@ -15,7 +15,7 @@ public class HttpServer
         {
             Socket client = await _tcpListenerServer.AcceptClient();
             Console.WriteLine("Connection received");
-            Task.Run(() => SocketHandler.HandleClient(client));
+            _ = Task.Run(() => SocketHandler.HandleClient(client));
         }
     }
 }
