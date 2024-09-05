@@ -13,6 +13,6 @@ public class SocketHandler
         byte[] msg = Encoding.ASCII.GetBytes(response.ToString());
         client.Send(msg);
 
-        // Console.WriteLine(response.ToString());
+        Console.WriteLine(response.ToString());
     }
 }

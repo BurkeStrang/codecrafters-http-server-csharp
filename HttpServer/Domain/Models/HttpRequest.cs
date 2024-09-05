@@ -15,7 +15,7 @@ public class HttpRequest
         string method = startLine.Split(" ")[0];
         string path = startLine.Split(" ")[1];
         string? body = path.Split("/")[^1] ?? null;
-        string? header = requestString.Split("User-Agent:")[1].Split("\r\n")[0] ?? null;
+        string? header = requestString.Split("User-Agent: ")[1].Split("\r\n")[0] ?? null;
 
         return new HttpRequest
         {
