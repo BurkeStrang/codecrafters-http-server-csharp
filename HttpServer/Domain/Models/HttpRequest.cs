@@ -9,20 +9,47 @@ public class HttpRequest
 
     public static HttpRequest Parse(byte[] bufferRequest)
     {
-
         string requestString = Encoding.ASCII.GetString(bufferRequest);
-        string startLine = requestString.Split("\r\n")[0];
-        string method = startLine.Split(" ")[0];
-        string path = startLine.Split(" ")[1];
-        string? body = path.Split("/")[^1] ?? null;
-        string? header = requestString.Split("User-Agent: ")[1].Split("\r\n")[0] ?? null;
+
+        // Split by line, ensuring at least one line exists
+        string[] requestLines = requestString.Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
+        if (requestLines.Length == 0)
+        {
+            throw new ArgumentException("Invalid HTTP request: missing start line.");
+        }
+
+        // Split the start line and check for at least two parts (method and path)
+        string[] startLineParts = requestLines[0].Split(" ", StringSplitOptions.RemoveEmptyEntries);
+        if (startLineParts.Length < 2)
+        {
+            throw new ArgumentException("Invalid HTTP request: missing method or path.");
+        }
+
+        string method = startLineParts[0];
+        string path = startLineParts[1];
+
+        // Parse body safely, checking if the path contains enough parts
+        string? body = path.Contains("/") ? path.Split("/").Last() : null;
+
+        // Safely extract header, checking if "User-Agent" exists
+        string? header = null;
+        if (requestString.Contains("User-Agent: "))
+        {
+            var headerParts = requestString.Split("User-Agent: ", StringSplitOptions.None);
+            if (headerParts.Length > 1)
+            {
+                var headerLines = headerParts[1]
+                    .Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
+                header = headerLines.Length > 0 ? headerLines[0] : null;
+            }
+        }
 
         return new HttpRequest
         {
             Method = method,
             Path = path,
             Body = body,
-            Header = header
+            Header = header,
         };
     }
 }
