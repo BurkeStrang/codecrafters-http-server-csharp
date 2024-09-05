@@ -29,16 +29,16 @@ public class HttpRequest
         string path = startLineParts[1];
 
         // Parse body safely, checking if the path contains enough parts
-        string? body = path.Contains("/") ? path.Split("/").Last() : null;
+        string? body = path.Contains('/') ? path.Split("/").Last() : null;
 
         // Safely extract header, checking if "User-Agent" exists
         string? header = null;
         if (requestString.Contains("User-Agent: "))
         {
-            var headerParts = requestString.Split("User-Agent: ", StringSplitOptions.None);
+            string[] headerParts = requestString.Split("User-Agent: ", StringSplitOptions.None);
             if (headerParts.Length > 1)
             {
-                var headerLines = headerParts[1]
+                string[] headerLines = headerParts[1]
                     .Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
                 header = headerLines.Length > 0 ? headerLines[0] : null;
             }
