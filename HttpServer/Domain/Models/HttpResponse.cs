@@ -12,13 +12,8 @@ public class HttpResponse
 
     public static HttpResponse CreateResponse(HttpRequest request)
     {
-        if (request.Path.Equals("/"))
-        {
-            return new HttpResponse { StatusCode = 200, ReasonPhrase = "OK" };
-        }
-        else
-        {
-            return new HttpResponse { StatusCode = 404, ReasonPhrase = "Not Found" };
-        }
+        return request.Path!.Equals("/")
+            ? new HttpResponse { StatusCode = 200, ReasonPhrase = "OK" }
+            : new HttpResponse { StatusCode = 404, ReasonPhrase = "Not Found" };
     }
 }

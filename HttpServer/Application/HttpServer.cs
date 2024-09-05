@@ -1,22 +1,19 @@
+#pragma warning disable IDE1006 // Naming Styles
 namespace codecrafters_http_server.HttpServer.Application;
+#pragma warning restore IDE1006 // Naming Styles
 
 public class HttpServer
 {
-    private readonly TcpListenerServer _tcpListenerServer;
-    private readonly SocketHandler _socketHandler;
+    public HttpServer() => _tcpListenerServer = new TcpListenerServer(IPAddress.Any, 4221);
 
-    public HttpServer()
-    {
-        _tcpListenerServer = new TcpListenerServer(IPAddress.Any, 4221);
-        _socketHandler = new SocketHandler();
-    }
+    private readonly TcpListenerServer _tcpListenerServer;
 
     public void Start()
     {
         _tcpListenerServer.Start();
         while (true)
         {
-            var client = _tcpListenerServer.AcceptClient();
+            Socket client = _tcpListenerServer.AcceptClient();
             Console.WriteLine("Connection received");
             SocketHandler.HandleClient(client);
         }

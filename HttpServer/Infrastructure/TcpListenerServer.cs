@@ -1,14 +1,8 @@
-
 namespace codecrafters_http_server.HttpServer.Infrastructure;
 
-public class TcpListenerServer
+public class TcpListenerServer(IPAddress ipAddress, int port)
 {
-    private readonly TcpListener _tcpListener;
-
-    public TcpListenerServer(IPAddress ipAddress, int port)
-    {
-        _tcpListener = new TcpListener(ipAddress, port);
-    }
+    private readonly TcpListener _tcpListener = new(ipAddress, port);
 
     public void Start()
     {

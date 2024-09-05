@@ -1,2 +1,1 @@
-HttpServer server = new();
-server.Start();
+new HttpServer().Start();
