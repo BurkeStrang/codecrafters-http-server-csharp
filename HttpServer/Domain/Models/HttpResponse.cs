@@ -62,6 +62,16 @@ public sealed record HttpResponse(string ResponseString)
     {
         return new HttpResponse(HttpStatusLine.NotFound).AddCrlf();
     }
+
+    public static HttpResponse Created()
+    {
+        return new HttpResponse(HttpStatusLine.Created).AddCrlf();
+    }
+
+    public static HttpResponse BadRequest()
+    {
+        return new HttpResponse(HttpStatusLine.BadRequest).AddCrlf();
+    }
 }
 
 
