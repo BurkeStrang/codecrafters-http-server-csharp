@@ -59,7 +59,7 @@ public class HttpRequest
                     .Where(parts => parts.Length == 2)
                     .ToDictionary(parts => parts[0].Trim(), parts => parts[1].Trim()),
                 Method = lines.FirstOrDefault()?.Split(' ')?.ElementAtOrDefault(0) ?? "",
-                Body = lines[^1].Trim()
+                Body = lines.LastOrDefault() ?? "",
             };
 
         return request;
@@ -90,7 +90,7 @@ public class HttpRequest
             }
 
             // Write the file
-            File.WriteAllBytes(filePath, Encoding.UTF8.GetBytes(body));
+            File.WriteAllText(filePath, body);
             return HttpResponse.Created();
         }
 
