@@ -2,54 +2,51 @@ namespace codecrafters_http_server.HttpServer.Domain.Models;
 
 public class HttpRequest
 {
-    public string? Method { get; set; }
-    public string? Path { get; set; }
-    public string? Body { get; set; }
-    public string? Header { get; set; }
+    public string Path { get; private set; } = "";
+    public Dictionary<string, string> Headers { get; private set; } = [];
+    private static readonly string[] Separator = ["\r\n", "\n"];
 
-    public static HttpRequest Parse(byte[] bufferRequest)
+    public static HttpResponse CreateResponse(byte[] bufferRequest, string[] args)
     {
-        string requestString = Encoding.ASCII.GetString(bufferRequest);
+        HttpRequest request = ParseRequest(bufferRequest);
 
-        // Split by line, ensuring at least one line exists
-        string[] requestLines = requestString.Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
-        if (requestLines.Length == 0)
+        return request.Path switch
         {
-            throw new ArgumentException("Invalid HTTP request: missing start line.");
-        }
-
-        // Split the start line and check for at least two parts (method and path)
-        string[] startLineParts = requestLines[0].Split(" ", StringSplitOptions.RemoveEmptyEntries);
-        if (startLineParts.Length < 2)
-        {
-            throw new ArgumentException("Invalid HTTP request: missing method or path.");
-        }
-
-        string method = startLineParts[0];
-        string path = startLineParts[1];
-
-        // Parse body safely, checking if the path contains enough parts
-        string? body = path.Contains('/') ? path.Split("/").Last() : null;
-
-        // Safely extract header, checking if "User-Agent" exists
-        string? header = null;
-        if (requestString.Contains("User-Agent: "))
-        {
-            string[] headerParts = requestString.Split("User-Agent: ", StringSplitOptions.None);
-            if (headerParts.Length > 1)
-            {
-                string[] headerLines = headerParts[1]
-                    .Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
-                header = headerLines.Length > 0 ? headerLines[0] : null;
-            }
-        }
-
-        return new HttpRequest
-        {
-            Method = method,
-            Path = path,
-            Body = body,
-            Header = header,
+            "/" => HttpResponse.Ok(),
+            string path when path.StartsWith("/echo") => HttpResponse.Ok(path.Split('/').Last()),
+            "/user-agent" => HttpResponse.Ok(
+                request.Headers.TryGetValue("User-Agent", out string? userAgent)
+                    ? userAgent
+                    : "Unknown"
+            ),
+            string path when path.StartsWith("/files") => HandleFileRequest(path, args[1]),
+            _ => HttpResponse.NotFound(),
         };
+    }
+
+    private static HttpRequest ParseRequest(byte[] bufferRequest)
+    {
+        string requestString = Encoding.UTF8.GetString(bufferRequest);
+        string[] lines = requestString.Split(Separator, StringSplitOptions.None);
+        HttpRequest request =
+            new()
+            {
+                Path = lines.FirstOrDefault()?.Split(' ')?.ElementAtOrDefault(1) ?? "/",
+                Headers = lines
+                    .Skip(1)
+                    .TakeWhile(line => !string.IsNullOrWhiteSpace(line))
+                    .Select(line => line.Split(':', 2))
+                    .Where(parts => parts.Length == 2)
+                    .ToDictionary(parts => parts[0].Trim(), parts => parts[1].Trim()),
+            };
+
+        return request;
+    }
+
+    private static HttpResponse HandleFileRequest(string path, string fileDirectory)
+    {
+        string fileName = path.Split('/').Last();
+        string filePath = System.IO.Path.Combine(fileDirectory, fileName);
+        return File.Exists(filePath) ? HttpResponse.File(filePath) : HttpResponse.NotFound();
     }
 }

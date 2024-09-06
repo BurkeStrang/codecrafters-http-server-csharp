@@ -8,14 +8,13 @@ public class HttpServer
 
     private readonly TcpListenerServer _tcpListenerServer;
 
-    public async Task Start()
+    public async Task Start(string[] args)
     {
         _tcpListenerServer.Start();
         while (true)
         {
             Socket client = await _tcpListenerServer.AcceptClient();
-            Console.WriteLine("Connection received");
-            _ = Task.Run(() => SocketHandler.HandleClient(client));
+            _ = Task.Run(() => SocketHandler.HandleClient(client, args));
         }
     }
 }
