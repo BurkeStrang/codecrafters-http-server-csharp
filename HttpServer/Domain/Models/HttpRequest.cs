@@ -59,7 +59,7 @@ public class HttpRequest
                     .Where(parts => parts.Length == 2)
                     .ToDictionary(parts => parts[0].Trim(), parts => parts[1].Trim()),
                 Method = lines.FirstOrDefault()?.Split(' ')?.ElementAtOrDefault(0) ?? "",
-                Body = lines.LastOrDefault() ?? "",
+                Body = lines[^1].Trim()
             };
 
         return request;
