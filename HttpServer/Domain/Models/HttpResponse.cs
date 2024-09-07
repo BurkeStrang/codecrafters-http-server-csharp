@@ -55,15 +55,18 @@ public sealed record HttpResponse(string ResponseString)
             .AddBody(body);
     }
 
-    public static HttpResponse File(string fileName)
+    public static HttpResponse File(string filePath)
     {
-        byte[] fileBytes = System.IO.File.ReadAllBytes(fileName);
-        // string fileContent = System.IO.File.ReadAllText(fileName);
+        // byte[] fileBytes = System.IO.File.ReadAllBytes(fileName);
+        string fileContent = System.IO.File.ReadAllText(filePath);
+        Console.WriteLine("File path: " + filePath);
+        Console.WriteLine(fileContent);
+        Console.WriteLine("File content length: " + fileContent.Length);
         return new HttpResponse(HttpStatusLine.Ok)
             .AddHeader(HttpHeader.ContentType, "application/octet-stream")
-            .AddHeader(HttpHeader.ContentLength, fileBytes.Length.ToString())
+            .AddHeader(HttpHeader.ContentLength, fileContent.Length.ToString())
             .AddCrlf()
-            .AddBody(fileBytes);
+            .AddBody(fileContent);
     }
 
     public static HttpResponse NotFound()

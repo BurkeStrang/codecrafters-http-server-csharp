@@ -90,7 +90,12 @@ public class HttpRequest
             }
 
             // Write the file
+            body = body.TrimEnd('\0');
             File.WriteAllText(filePath, body);
+            // string data = File.ReadAllText(filePath);
+            // Console.WriteLine($"Is this right? : {data}");
+            // Console.WriteLine($"Body (Hex): {BitConverter.ToString(Encoding.UTF8.GetBytes(body))}");
+            // Console.WriteLine($"Length: {data.Length}");
             return HttpResponse.Created();
         }
 
