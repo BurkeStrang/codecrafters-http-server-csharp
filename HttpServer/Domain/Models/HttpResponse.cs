@@ -19,6 +19,14 @@ public sealed record HttpResponse(string ResponseString)
         return new(sb.ToString());
     }
 
+    public HttpResponse AddBody(byte[] body)
+    {
+        StringBuilder sb = new(ResponseString);
+        string bodyAsString = Encoding.UTF8.GetString(body);
+        sb.Append(bodyAsString);
+        return new(sb.ToString());
+    }
+
     public HttpResponse AddBody(string body)
     {
         StringBuilder sb = new(ResponseString);
@@ -50,12 +58,12 @@ public sealed record HttpResponse(string ResponseString)
     public static HttpResponse File(string fileName)
     {
         byte[] fileBytes = System.IO.File.ReadAllBytes(fileName);
-        string fileContent = System.IO.File.ReadAllText(fileName);
+        // string fileContent = System.IO.File.ReadAllText(fileName);
         return new HttpResponse(HttpStatusLine.Ok)
             .AddHeader(HttpHeader.ContentType, "application/octet-stream")
             .AddHeader(HttpHeader.ContentLength, fileBytes.Length.ToString())
             .AddCrlf()
-            .AddBody(fileContent);
+            .AddBody(fileBytes);
     }
 
     public static HttpResponse NotFound()
