@@ -14,16 +14,12 @@ public sealed record HttpResponse(string ResponseString)
 
     public HttpResponse AddHeader(string httpHeader, string value)
     {
+        // if (httpHeader.Contains("Accept-Encoding") && !value.Contains("gzip"))
+        // {
+        //     return null;
+        // }
         StringBuilder sb = new(ResponseString);
         sb.Append($"{httpHeader}: {value}\r\n");
-        return new(sb.ToString());
-    }
-
-    public HttpResponse AddBody(byte[] body)
-    {
-        StringBuilder sb = new(ResponseString);
-        string bodyAsString = Encoding.UTF8.GetString(body);
-        sb.Append(bodyAsString);
         return new(sb.ToString());
     }
 
@@ -41,27 +37,29 @@ public sealed record HttpResponse(string ResponseString)
         return new(sb.ToString());
     }
 
-    public static HttpResponse Ok()
+    public static HttpResponse Ok(bool? isGzip = false, string? body = null)
     {
+        if (isGzip == true)
+        {
+            return new HttpResponse(HttpStatusLine.Ok)
+                .AddHeader(HttpHeader.ContentType, "text/plain")
+                .AddHeader(HttpHeader.ContentEncoding, "gzip")
+                .AddCrlf();
+        }
+        else if (body != null)
+        {
+            return new HttpResponse(HttpStatusLine.Ok)
+                .AddHeader(HttpHeader.ContentType, "text/plain")
+                .AddHeader(HttpHeader.ContentLength, body.Length.ToString())
+                .AddCrlf()
+                .AddBody(body);
+        }
         return new HttpResponse(HttpStatusLine.Ok).AddCrlf();
-    }
-
-    public static HttpResponse Ok(string body)
-    {
-        return new HttpResponse(HttpStatusLine.Ok)
-            .AddHeader(HttpHeader.ContentType, "text/plain")
-            .AddHeader(HttpHeader.ContentLength, body.Length.ToString())
-            .AddCrlf()
-            .AddBody(body);
     }
 
     public static HttpResponse File(string filePath)
     {
-        // byte[] fileBytes = System.IO.File.ReadAllBytes(fileName);
         string fileContent = System.IO.File.ReadAllText(filePath);
-        Console.WriteLine("File path: " + filePath);
-        Console.WriteLine(fileContent);
-        Console.WriteLine("File content length: " + fileContent.Length);
         return new HttpResponse(HttpStatusLine.Ok)
             .AddHeader(HttpHeader.ContentType, "application/octet-stream")
             .AddHeader(HttpHeader.ContentLength, fileContent.Length.ToString())
@@ -84,5 +82,3 @@ public sealed record HttpResponse(string ResponseString)
         return new HttpResponse(HttpStatusLine.BadRequest).AddCrlf();
     }
 }
-
-

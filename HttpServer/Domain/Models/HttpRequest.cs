@@ -11,37 +11,32 @@ public class HttpRequest
     public static HttpResponse CreateResponse(byte[] bufferRequest, string[] args)
     {
         HttpRequest request = ParseRequest(bufferRequest);
-        HttpResponse response;
+
+        bool isGzip =
+            request.Headers.TryGetValue("Accept-Encoding", out string? contentEncoding)
+            && contentEncoding.Contains("gzip");
 
         if (request.Path == "/")
         {
-            response = HttpResponse.Ok();
+            return HttpResponse.Ok(isGzip: isGzip);
         }
         else if (request.Path.StartsWith("/echo"))
         {
-            var echoValue = request.Path.Split('/').Last();
-            response = HttpResponse.Ok(echoValue);
+            string echoValue = request.Path.Split('/').Last();
+            return HttpResponse.Ok(isGzip: isGzip, body: echoValue);
         }
         else if (request.Path == "/user-agent")
         {
-            if (request.Headers.TryGetValue("User-Agent", out string? userAgent))
-            {
-                response = HttpResponse.Ok(userAgent);
-            }
-            else
-            {
-                response = HttpResponse.Ok("Unknown");
-            }
-        }
-        else if (request.Path.StartsWith("/files"))
-        {
-            response = HandleFileRequest(request.Path, args[1], request.Method, request.Body);
+            return request.Headers.TryGetValue("User-Agent", out string? userAgent)
+                ? HttpResponse.Ok(isGzip: isGzip, body: userAgent)
+                : HttpResponse.Ok(isGzip: isGzip, body: "Unknown");
         }
         else
         {
-            response = HttpResponse.NotFound();
+            return request.Path.StartsWith("/files")
+                ? HandleFileRequest(request.Path, args[1], request.Method, request.Body)
+                : HttpResponse.NotFound();
         }
-        return response;
     }
 
     private static HttpRequest ParseRequest(byte[] bufferRequest)
@@ -77,36 +72,22 @@ public class HttpRequest
 
         if (method == "POST")
         {
-            // Ensure the directory exists
             if (!Directory.Exists(fileDirectory))
             {
                 Directory.CreateDirectory(fileDirectory);
             }
 
-            // Validate the body is not null or empty
             if (string.IsNullOrEmpty(body))
             {
                 return HttpResponse.BadRequest();
             }
 
-            // Write the file
             body = body.TrimEnd('\0');
             File.WriteAllText(filePath, body);
-            // string data = File.ReadAllText(filePath);
-            // Console.WriteLine($"Is this right? : {data}");
-            // Console.WriteLine($"Body (Hex): {BitConverter.ToString(Encoding.UTF8.GetBytes(body))}");
-            // Console.WriteLine($"Length: {data.Length}");
             return HttpResponse.Created();
         }
 
         // Handle GET request (retrieving the file)
-        if (File.Exists(filePath))
-        {
-            return HttpResponse.File(filePath);
-        }
-        else
-        {
-            return HttpResponse.NotFound();
-        }
+        return File.Exists(filePath) ? HttpResponse.File(filePath) : HttpResponse.NotFound();
     }
 }
