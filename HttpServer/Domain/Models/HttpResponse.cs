@@ -1,50 +1,64 @@
+using System.IO.Compression;
+
 namespace codecrafters_http_server.HttpServer.Domain.Models;
 
-public sealed record HttpResponse(string ResponseString)
+public sealed class HttpResponse(string responseString)
 {
-    public static implicit operator string(HttpResponse httpResponse)
-    {
-        return httpResponse.ResponseString;
-    }
-
-    public static implicit operator byte[](HttpResponse httpResponse)
-    {
-        return Encoding.UTF8.GetBytes(httpResponse.ResponseString);
-    }
+    private readonly List<byte> _responseBytes = new(Encoding.UTF8.GetBytes(responseString));
 
     public HttpResponse AddHeader(string httpHeader, string value)
     {
-        // if (httpHeader.Contains("Accept-Encoding") && !value.Contains("gzip"))
-        // {
-        //     return null;
-        // }
-        StringBuilder sb = new(ResponseString);
-        sb.Append($"{httpHeader}: {value}\r\n");
-        return new(sb.ToString());
+        string header = $"{httpHeader}: {value}\r\n";
+        _responseBytes.AddRange(Encoding.UTF8.GetBytes(header));
+        return this;
     }
 
     public HttpResponse AddBody(string body)
     {
-        StringBuilder sb = new(ResponseString);
-        sb.Append(body);
-        return new(sb.ToString());
+        _responseBytes.AddRange(Encoding.UTF8.GetBytes(body));
+        return this;
+    }
+
+    public HttpResponse AddBody(byte[] body)
+    {
+        _responseBytes.AddRange(body);
+        return this;
     }
 
     public HttpResponse AddCrlf()
     {
-        StringBuilder sb = new(ResponseString);
-        sb.Append("\r\n");
-        return new(sb.ToString());
+        _responseBytes.AddRange(Encoding.UTF8.GetBytes("\r\n"));
+        return this;
+    }
+
+    public byte[] ToBytes()
+    {
+        return [.. _responseBytes];
+    }
+
+    public static byte[] GZip(string? body)
+    {
+        byte[] input = Encoding.UTF8.GetBytes(body!);
+        using MemoryStream output = new();
+        using (GZipStream gZipStream = new(output, CompressionMode.Compress))
+        {
+            gZipStream.Write(input, 0, input.Length);
+        }
+        return output.ToArray();
     }
 
     public static HttpResponse Ok(bool? isGzip = false, string? body = null)
     {
-        if (isGzip == true)
+        if (isGzip == true && body != null)
         {
+            byte[] compressedBody = GZip(body);
+
             return new HttpResponse(HttpStatusLine.Ok)
                 .AddHeader(HttpHeader.ContentType, "text/plain")
                 .AddHeader(HttpHeader.ContentEncoding, "gzip")
-                .AddCrlf();
+                .AddHeader(HttpHeader.ContentLength, compressedBody.Length.ToString())
+                .AddCrlf()
+                .AddBody(compressedBody);
         }
         else if (body != null)
         {

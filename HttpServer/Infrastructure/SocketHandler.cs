@@ -7,6 +7,7 @@ public static class SocketHandler
         byte[] bufferRequest = new byte[1_024];
         client.Receive(bufferRequest);
         HttpResponse response = HttpRequest.CreateResponse(bufferRequest, args);
-        client.Send(response);
+        byte[] responseBytes = response.ToBytes();
+        client.Send(responseBytes);
     }
 }
