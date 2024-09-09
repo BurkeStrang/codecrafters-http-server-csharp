@@ -72,16 +72,6 @@ public class HttpRequest
 
         if (method == "POST")
         {
-            if (!Directory.Exists(fileDirectory))
-            {
-                Directory.CreateDirectory(fileDirectory);
-            }
-
-            if (string.IsNullOrEmpty(body))
-            {
-                return HttpResponse.BadRequest();
-            }
-
             body = body.TrimEnd('\0');
             File.WriteAllText(filePath, body);
             return HttpResponse.Created();
